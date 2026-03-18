@@ -1,99 +1,122 @@
-import Header from "../Components/Header";
-import FormCard from "../Components/FormCard";
-import FeatureCard from "../Components/FeatureCard";
+import Header from "../../App/Components/Header";
+import FormCard from "../../App/Components/FormCard";
 
 export default function Home() {
+  const forms = [
+    {
+      id: "contato",
+      title: "Formulário de Contato",
+      description: "Entre em contato conosco. Responderemos em até 24 horas.",
+      tag: "Atendimento",
+      fields: 3,
+    },
+    {
+      id: "satisfacao",
+      title: "Pesquisa de Satisfação",
+      description: "Sua opinião é muito importante para melhorarmos nossos serviços.",
+      tag: "Feedback",
+      fields: 3,
+    },
+    {
+      id: "evento",
+      title: "Inscrição em Evento",
+      description: "Garanta sua participação no próximo evento da empresa.",
+      tag: "Eventos",
+      fields: 3,
+    },
+    {
+      id: "candidatos",
+      title: "Cadastro de Candidatos",
+      description: "Envie seus dados para o nosso banco de talentos.",
+      tag: "RH",
+      fields: 3,
+    },
+  ];
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <Header />
 
-      <div className="pt-28 max-w-6xl mx-auto px-6">
-        
-        {/* HERO */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold">
-            Formulários Personalizados
-          </h1>
+      <main className="pt-28">
+        <section className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm text-sm text-gray-600 mb-6">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              Sistema ativo • {forms.length} formulários disponíveis
+            </div>
 
-          <h2 className="text-4xl font-bold text-blue-600 mt-2">
-            Integrados ao Microsoft Forms
-          </h2>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+              Formulários Personalizados
+            </h1>
 
-          <p className="text-gray-600 mt-4 max-w-xl mx-auto">
-            Interface moderna e profissional para coletar respostas
-            automaticamente enviadas via Power Automate.
-          </p>
+            <h2 className="text-4xl md:text-5xl font-bold text-blue-600 mt-2 leading-tight">
+              Integrados ao Microsoft Forms
+            </h2>
 
-          <div className="mt-4 text-sm text-gray-500">
-            🟢 Sistema Ativo • 4 Formulários Disponíveis
+            <p className="max-w-2xl mx-auto text-gray-600 mt-5 text-base md:text-lg">
+              Interface moderna e profissional para coleta de respostas com
+              integração preparada para Microsoft 365 e Power Automate.
+            </p>
           </div>
-        </div>
 
-        {/* FORMULÁRIOS */}
-        <h2 className="text-xl font-semibold mb-6 text-center">
-          Escolha um Formulário
-        </h2>
+          <div className="mb-16">
+            <h3 className="text-2xl font-semibold text-gray-900 text-center mb-8">
+              Escolha um formulário
+            </h3>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-16">
-          <FormCard
-            title="Formulário de Contato"
-            description="Entre em contato conosco. Responderemos em até 24 horas."
-            tag="Atendimento"
-            fields={6}
-          />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {forms.map((form) => (
+                <FormCard
+                  key={form.id}
+                  id={form.id}
+                  title={form.title}
+                  description={form.description}
+                  tag={form.tag}
+                  fields={form.fields}
+                />
+              ))}
+            </div>
+          </div>
 
-          <FormCard
-            title="Pesquisa de Satisfação"
-            description="Sua opinião é muito importante para nós!"
-            tag="Feedback"
-            fields={5}
-          />
+          <div className="pb-14">
+            <h3 className="text-2xl font-semibold text-gray-900 text-center mb-8">
+              Recursos do sistema
+            </h3>
 
-          <FormCard
-            title="Inscrição em Evento"
-            description="Cadastre-se para nosso próximo evento."
-            tag="Eventos"
-            fields={8}
-          />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <div className="text-2xl mb-4">🧩</div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  Formulários dinâmicos
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Estrutura preparada para múltiplos formulários com campos reutilizáveis.
+                </p>
+              </div>
 
-          <FormCard
-            title="Cadastro de Candidatos"
-            description="Candidate-se às nossas vagas disponíveis."
-            tag="RH"
-            fields={9}
-          />
-        </div>
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <div className="text-2xl mb-4">⚡</div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  Integração pronta
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Backend preparado para envio de respostas ao Power Automate por webhook.
+                </p>
+              </div>
 
-        {/* FEATURES */}
-        <h2 className="text-xl font-semibold text-center mb-6">
-          Recursos do Sistema
-        </h2>
-
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
-          <FeatureCard
-            icon="📄"
-            title="Formulários Dinâmicos"
-            description="Campos personalizáveis com validação."
-          />
-
-          <FeatureCard
-            icon="📊"
-            title="Dashboard Completo"
-            description="Visualize respostas em tempo real."
-          />
-
-          <FeatureCard
-            icon="⚙️"
-            title="Integração Microsoft"
-            description="Envio automático via Power Automate."
-          />
-        </div>
-
-        {/* FOOTER */}
-        <div className="text-center text-sm text-gray-500 pb-10">
-          Sistema de Formulários Profissional • Integrado ao Microsoft Forms
-        </div>
-      </div>
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <div className="text-2xl mb-4">📊</div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  Base para dashboard
+                </h4>
+                <p className="text-sm text-gray-600">
+                  Arquitetura pensada para evoluir para painel administrativo e modo SaaS.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
