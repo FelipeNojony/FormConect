@@ -3,6 +3,7 @@ import FormField from "./FormField";
 export default function DynamicForm({
   fields,
   formData,
+  errors,
   loading,
   onChange,
   onSubmit,
@@ -14,6 +15,7 @@ export default function DynamicForm({
           key={field.name}
           field={field}
           value={formData[field.name]}
+          error={errors[field.name]}
           onChange={onChange}
         />
       ))}

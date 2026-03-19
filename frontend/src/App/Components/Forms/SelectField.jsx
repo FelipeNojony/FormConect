@@ -1,4 +1,4 @@
-export default function SelectField({ field, value, onChange }) {
+export default function SelectField({ field, value, error, onChange }) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-950 mb-2">
@@ -8,9 +8,13 @@ export default function SelectField({ field, value, onChange }) {
       <select
         name={field.name}
         value={value || ""}
-        required={field.required}
+        required={false}
         onChange={onChange}
-        className="w-full rounded-xl bg-gray-100 px-4 py-4 text-gray-700 outline-none border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+        className={`w-full rounded-xl px-4 py-4 text-gray-700 outline-none border transition ${
+          error
+            ? "bg-red-50 border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+            : "bg-gray-100 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        }`}
       >
         <option value="" disabled>
           {field.placeholder || "Selecione uma opção"}
@@ -22,6 +26,8 @@ export default function SelectField({ field, value, onChange }) {
           </option>
         ))}
       </select>
+
+      {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
     </div>
   );
 }

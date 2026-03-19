@@ -5,25 +5,83 @@ import BackButton from "../../App/Components/BackButton";
 import DynamicForm from "../../App/Components/Forms/DynamicForm";
 import FormsConfig from "../Data/FormsConfig";
 import api from "../../Services/Api";
+import { toast } from "sonner";
 
 export default function FormPage() {
   const { id } = useParams();
   const formConfig = FormsConfig[id];
 
   const [formData, setFormData] = useState({});
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
     const { name, type, value, checked } = e.target;
 
+    const newValue = type === "checkbox" ? checked : value;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: newValue,
     }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  }
+
+  function validateForm() {
+    const newErrors = {};
+
+    formConfig.fields.forEach((field) => {
+      const value = formData[field.name];
+
+      if (field.required) {
+        if (field.type === "checkbox") {
+          if (!value) {
+            newErrors[field.name] = "Este campo é obrigatório.";
+          }
+        } else if (!value || String(value).trim() === "") {
+          newErrors[field.name] = "Este campo é obrigatório.";
+        }
+      }
+
+      if (field.type === "email" && value) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          newErrors[field.name] = "Digite um e-mail válido.";
+        }
+      }
+
+      if (field.name === "telefone" && value) {
+        const onlyNumbers = value.replace(/\D/g, "");
+        if (onlyNumbers.length < 10) {
+          newErrors[field.name] = "Digite um telefone válido.";
+        }
+      }
+
+      if (field.type === "textarea" && field.required && value) {
+        if (String(value).trim().length < 10) {
+          newErrors[field.name] = "Digite pelo menos 10 caracteres.";
+        }
+      }
+    });
+
+    return newErrors;
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      toast.error("Corrija os campos antes de enviar.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -32,9 +90,13 @@ export default function FormPage() {
         ...formData,
       });
 
-      alert("Enviado com sucesso!");
+      toast.success("Formulário enviado com sucesso!");
+
+      setFormData({});
+      setErrors({});
     } catch (error) {
-      alert("Erro ao enviar");
+      toast.error("Erro ao enviar formulário");
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -45,7 +107,7 @@ export default function FormPage() {
       <div className="bg-gray-50 min-h-screen">
         <Header />
         <div className="pt-28 max-w-4xl mx-auto px-6">
-          <div className="bg-white border rounded-2xl shadow-sm p-8 text-center">
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 text-center">
             <h1 className="text-2xl font-bold mb-2">Formulário não encontrado</h1>
             <p className="text-gray-500">
               O formulário que você tentou acessar não existe.
@@ -92,6 +154,7 @@ export default function FormPage() {
           <DynamicForm
             fields={formConfig.fields}
             formData={formData}
+            errors={errors}
             loading={loading}
             onChange={handleChange}
             onSubmit={handleSubmit}

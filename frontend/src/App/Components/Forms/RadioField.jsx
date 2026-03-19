@@ -1,4 +1,4 @@
-export default function RadioField({ field, value, onChange }) {
+export default function RadioField({ field, value, error, onChange }) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-950 mb-3">
@@ -16,7 +16,6 @@ export default function RadioField({ field, value, onChange }) {
               name={field.name}
               value={option}
               checked={value === option}
-              required={field.required}
               onChange={onChange}
               className="h-4 w-4 accent-black"
             />
@@ -24,6 +23,8 @@ export default function RadioField({ field, value, onChange }) {
           </label>
         ))}
       </div>
+
+      {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
     </div>
   );
 }
