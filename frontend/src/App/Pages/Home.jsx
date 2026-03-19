@@ -1,35 +1,37 @@
 import Header from "../../App/Components/Header";
 import FormCard from "../../App/Components/FormCard";
+import FormsConfig from "../Data/FormsConfig";
+
 
 export default function Home() {
   const forms = [
     {
       id: "contato",
-      title: "Formulário de Contato",
-      description: "Entre em contato conosco. Responderemos em até 24 horas.",
-      tag: "Atendimento",
-      fields: 3,
+      title: FormsConfig.contato.title,
+      description: FormsConfig.contato.description,
+      tag: FormsConfig.contato.tag,
+      fields: FormsConfig.contato.fields.length,
     },
     {
       id: "satisfacao",
-      title: "Pesquisa de Satisfação",
-      description: "Sua opinião é muito importante para melhorarmos nossos serviços.",
-      tag: "Feedback",
-      fields: 3,
+      title: FormsConfig.satisfacao.title,
+      description: FormsConfig.satisfacao.description,
+      tag: FormsConfig.satisfacao.tag,
+      fields: FormsConfig.satisfacao.fields.length,
     },
     {
       id: "evento",
-      title: "Inscrição em Evento",
-      description: "Garanta sua participação no próximo evento da empresa.",
-      tag: "Eventos",
-      fields: 3,
+      title: FormsConfig.evento.title,
+      description: FormsConfig.evento.description,
+      tag: FormsConfig.evento.tag,
+      fields: FormsConfig.evento.fields.length,
     },
     {
       id: "candidatos",
-      title: "Cadastro de Candidatos",
-      description: "Envie seus dados para o nosso banco de talentos.",
-      tag: "RH",
-      fields: 3,
+      title: FormsConfig.candidatos.title,
+      description: FormsConfig.candidatos.description,
+      tag: FormsConfig.candidatos.tag,
+      fields: FormsConfig.candidatos.fields.length,
     },
   ];
 
