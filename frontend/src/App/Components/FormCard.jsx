@@ -1,9 +1,22 @@
 import { useNavigate } from "react-router-dom";
 
-export default function FormCard({ id, title, description, tag, fields }) {
+export default function FormCard({
+  id,
+  slug,
+  title,
+  description,
+  tag,
+  fields,
+  isPublished,
+}) {
   const navigate = useNavigate();
 
   function handleNavigate() {
+    if (isPublished) {
+      navigate(`/form/publicado/${slug}`);
+      return;
+    }
+
     navigate(`/form/${id}`);
   }
 

@@ -1,10 +1,24 @@
 import Header from "../../App/Components/Header";
 import FormCard from "../../App/Components/FormCard";
 import FormsConfig from "../Data/FormsConfig";
+import { useEffect, useState } from "react";
+
+const PUBLISHED_FORMS_KEY = "formconnect-published-forms";
 
 
 export default function Home() {
-  const forms = [
+
+    const [publishedForms, setPublishedForms] = useState([]);
+
+useEffect(() => {
+  const savedPublishedForms = JSON.parse(
+    localStorage.getItem(PUBLISHED_FORMS_KEY) || "[]"
+  );
+
+  setPublishedForms(savedPublishedForms);
+}, []);
+
+  const defaultForms = [
     {
       id: "contato",
       title: FormsConfig.contato.title,
@@ -34,6 +48,19 @@ export default function Home() {
       fields: FormsConfig.candidatos.fields.length,
     },
   ];
+
+  const forms = [
+  ...defaultForms,
+  ...publishedForms.map((form) => ({
+    id: `published-${form.slug}`,
+    slug: form.slug,
+    title: form.title,
+    description: form.description,
+    tag: form.tag || "Personalizado",
+    fields: form.fields || form.questions?.length || 0,
+    isPublished: true,
+  })),
+];
 
   return (
     <div className="bg-gray-50 min-h-screen">
