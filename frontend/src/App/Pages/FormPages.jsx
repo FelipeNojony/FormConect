@@ -15,61 +15,104 @@ export default function FormPage() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  function handleChange(e) {
-    const { name, type, value, checked } = e.target;
+  function applyUrlMask(value) {
+  const trimmedValue = value.trim();
 
-    const newValue = type === "checkbox" ? checked : value;
+  if (!trimmedValue) return "";
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: newValue,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-    }));
+  if (
+    trimmedValue.startsWith("http://") ||
+    trimmedValue.startsWith("https://")
+  ) {
+    return trimmedValue;
   }
 
-  function validateForm() {
-    const newErrors = {};
+  return `https://${trimmedValue}`;
+}
 
-    formConfig.fields.forEach((field) => {
-      const value = formData[field.name];
+  function applyPhoneMask(value) {
+  const numbers = value.replace(/\D/g, "").slice(0, 11);
 
-      if (field.required) {
-        if (field.type === "checkbox") {
-          if (!value) {
-            newErrors[field.name] = "Este campo é obrigatório.";
-          }
-        } else if (!value || String(value).trim() === "") {
+  if (numbers.length <= 10) {
+    return numbers
+      .replace(/(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{4})(\d)/, "$1-$2");
+  }
+
+  return numbers
+    .replace(/(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{5})(\d)/, "$1-$2");
+}
+
+  function handleChange(e) {
+  const { name, type, value, checked } = e.target;
+
+  let newValue = type === "checkbox" ? checked : value;
+
+  if (name === "telefone") {
+    newValue = applyPhoneMask(value);
+  }
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: newValue,
+  }));
+
+  setErrors((prev) => ({
+    ...prev,
+    [name]: "",
+  }));
+}
+  
+
+function validateForm() {
+  const newErrors = {};
+
+  formConfig.fields.forEach((field) => {
+    if (field.showWhen) {
+      const shouldShow =
+        formData[field.showWhen.field] === field.showWhen.value;
+
+      if (!shouldShow) {
+        return;
+      }
+    }
+
+    const value = formData[field.name];
+
+    if (field.required) {
+      if (field.type === "checkbox") {
+        if (!value) {
           newErrors[field.name] = "Este campo é obrigatório.";
         }
+      } else if (!value || String(value).trim() === "") {
+        newErrors[field.name] = "Este campo é obrigatório.";
       }
+    }
 
-      if (field.type === "email" && value) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-          newErrors[field.name] = "Digite um e-mail válido.";
-        }
+    if (field.type === "email" && value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        newErrors[field.name] = "Digite um e-mail válido.";
       }
+    }
 
-      if (field.name === "telefone" && value) {
-        const onlyNumbers = value.replace(/\D/g, "");
-        if (onlyNumbers.length < 10) {
-          newErrors[field.name] = "Digite um telefone válido.";
-        }
+    if (field.name === "telefone" && value) {
+      const onlyNumbers = value.replace(/\D/g, "");
+      if (onlyNumbers.length < 10) {
+        newErrors[field.name] = "Digite um telefone válido.";
       }
+    }
 
-      if (field.type === "textarea" && field.required && value) {
-        if (String(value).trim().length < 10) {
-          newErrors[field.name] = "Digite pelo menos 10 caracteres.";
-        }
+    if (field.type === "textarea" && field.required && value) {
+      if (String(value).trim().length < 10) {
+        newErrors[field.name] = "Digite pelo menos 10 caracteres.";
       }
-    });
+    }
+  });
 
-    return newErrors;
-  }
+  return newErrors;
+}
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -84,11 +127,24 @@ export default function FormPage() {
 
     setLoading(true);
 
+    
+
     try {
+
+        const formattedData = { ...formData };
+
+if (formattedData.linkedin) {
+  formattedData.linkedin = applyUrlMask(formattedData.linkedin);
+}
+
+if (formattedData.portfolio) {
+  formattedData.portfolio = applyUrlMask(formattedData.portfolio);
+}
+
       await api.post("/submit", {
-        formType: id,
-        ...formData,
-      });
+  formType: id,
+  ...formattedData,
+});
 
       toast.success("Formulário enviado com sucesso!");
 
