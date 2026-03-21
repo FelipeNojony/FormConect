@@ -95,15 +95,17 @@ useEffect(() => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {forms.map((form) => (
-                <FormCard
-                  key={form.id}
-                  id={form.id}
-                  title={form.title}
-                  description={form.description}
-                  tag={form.tag}
-                  fields={form.fields}
-                />
-              ))}
+  <FormCard
+    key={form.id}
+    id={form.id}
+    slug={form.slug}
+    title={form.title}
+    description={form.description}
+    tag={form.tag}
+    fields={form.fields}
+    isPublished={form.isPublished}
+  />
+))}
             </div>
           </div>
 

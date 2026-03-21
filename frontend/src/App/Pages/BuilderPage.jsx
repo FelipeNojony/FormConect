@@ -23,6 +23,7 @@ import { toast } from "sonner";
 
 const STORAGE_KEY = "formconnect-builder-data";
 const PUBLISHED_FORMS_KEY = "formconnect-published-forms";
+const EDITING_FORM_KEY = "formconnect-editing-form";
 
 function createDefaultQuestion() {
   return {
@@ -40,6 +41,9 @@ function createDefaultForm() {
     title: "Novo formulário",
     description: "Descreva o objetivo deste formulário",
     questions: [createDefaultQuestion()],
+    tag: "Personalizado", // 👈 novo
+    slug: null,
+    publishedId: null,
   };
 }
 
@@ -57,18 +61,48 @@ export default function BuilderPage() {
   const navigate = useNavigate();
 
   const [builderData, setBuilderData] = useState(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
+  const editingForm = localStorage.getItem(EDITING_FORM_KEY);
+  
 
-    if (savedData) {
-      try {
-        return JSON.parse(savedData);
-      } catch (error) {
-        console.error("Erro ao carregar builder:", error);
-      }
+  if (editingForm) {
+    try {
+      const parsedEditingForm = JSON.parse(editingForm);
+
+      return {
+        title: parsedEditingForm.title || "Novo formulário",
+        description:
+          parsedEditingForm.description || "Descreva o objetivo deste formulário",
+        questions: parsedEditingForm.questions || [createDefaultQuestion()],
+        slug: parsedEditingForm.slug || null,
+        publishedId: parsedEditingForm.id || null,
+      };
+    } catch (error) {
+      console.error("Erro ao carregar formulário em edição:", error);
     }
+  }
 
-    return createDefaultForm();
-  });
+  const savedData = localStorage.getItem(STORAGE_KEY);
+
+  if (savedData) {
+    try {
+      const parsedSavedData = JSON.parse(savedData);
+
+      return {
+        ...parsedSavedData,
+        slug: parsedSavedData.slug || null,
+        publishedId: parsedSavedData.publishedId || null,
+      };
+    } catch (error) {
+      console.error("Erro ao carregar builder:", error);
+    }
+  }
+
+  return {
+    ...createDefaultForm(),
+    slug: null,
+    publishedId: null,
+  };
+});
 
   const [selectedQuestionId, setSelectedQuestionId] = useState(() => {
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -86,6 +120,7 @@ export default function BuilderPage() {
   });
 
   const { title, description, questions } = builderData;
+  
 
   const selectedQuestion = questions.find(
     (question) => question.id === selectedQuestionId
@@ -107,6 +142,18 @@ export default function BuilderPage() {
       setSelectedQuestionId(questions[0].id);
     }
   }, [questions, selectedQuestionId]);
+
+  function handleCreateNewForm() {
+  const defaultForm = createDefaultForm();
+
+  setBuilderData(defaultForm);
+  setSelectedQuestionId(defaultForm.questions[0].id);
+
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(EDITING_FORM_KEY);
+
+  toast.success("Pronto para criar um novo formulário!");
+}
 
   function updateForm(field, value) {
     setBuilderData((prev) => ({
@@ -191,45 +238,56 @@ export default function BuilderPage() {
   }
 
   function handleResetBuilder() {
-    const defaultForm = createDefaultForm();
-    setBuilderData(defaultForm);
-    setSelectedQuestionId(defaultForm.questions[0].id);
-    localStorage.removeItem(STORAGE_KEY);
-    toast.success("Builder resetado");
-  }
+  const defaultForm = createDefaultForm();
+  setBuilderData(defaultForm);
+  setSelectedQuestionId(defaultForm.questions[0].id);
+
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(EDITING_FORM_KEY);
+
+  toast.success("Builder resetado");
+}
 
   function handlePublishForm() {
-    const publishedForms = JSON.parse(
-      localStorage.getItem(PUBLISHED_FORMS_KEY) || "[]"
-    );
+  const publishedForms = JSON.parse(
+    localStorage.getItem(PUBLISHED_FORMS_KEY) || "[]"
+  );
 
-    const slug = generateSlug(builderData.title || "novo-formulario");
+  const slug = builderData.slug || generateSlug(builderData.title || "novo-formulario");
 
-    const formToPublish = {
-      id: crypto.randomUUID(),
-      slug,
-      title: builderData.title,
-      description: builderData.description,
-      tag: "Personalizado",
-      questions: builderData.questions,
-      fields: builderData.questions.length,
-      publishedAt: new Date().toISOString(),
+  const formToPublish = {
+    id: builderData.publishedId || crypto.randomUUID(),
+    slug,
+    title: builderData.title,
+    description: builderData.description,
+    tag: "Personalizado",
+    questions: builderData.questions,
+    fields: builderData.questions.length,
+    publishedAt: new Date().toISOString(),
+  };
+
+  const existingIndex = publishedForms.findIndex((form) => form.slug === slug);
+
+  if (existingIndex >= 0) {
+    publishedForms[existingIndex] = {
+      ...publishedForms[existingIndex],
+      ...formToPublish,
     };
-
-    const existingIndex = publishedForms.findIndex((form) => form.slug === slug);
-
-    if (existingIndex >= 0) {
-      publishedForms[existingIndex] = {
-        ...publishedForms[existingIndex],
-        ...formToPublish,
-      };
-    } else {
-      publishedForms.push(formToPublish);
-    }
-
-    localStorage.setItem(PUBLISHED_FORMS_KEY, JSON.stringify(publishedForms));
-    toast.success("Formulário publicado com sucesso!");
+  } else {
+    publishedForms.push(formToPublish);
   }
+
+  localStorage.setItem(PUBLISHED_FORMS_KEY, JSON.stringify(publishedForms));
+  localStorage.removeItem(EDITING_FORM_KEY);
+
+  setBuilderData((prev) => ({
+    ...prev,
+    slug,
+    publishedId: formToPublish.id,
+  }));
+
+  toast.success("Formulário publicado com sucesso!");
+}
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -238,18 +296,30 @@ export default function BuilderPage() {
       <div className="max-w-7xl mx-auto px-6 pt-28 pb-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-medium">
-              Builder
-            </span>
+            <button
+  onClick={() => navigate("/admin")}
+  className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition"
+>
+  <span className="text-lg">←</span>
+  Voltar para o painel
+</button>
             <h1 className="text-3xl font-bold text-gray-950 mt-3">
               Construtor de Formulários
             </h1>
+            
             <p className="text-gray-500 mt-2">
               Edite, reorganize e salve a estrutura do formulário em JSON.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+
+            <button
+  onClick={handleCreateNewForm}
+  className="border border-gray-200 bg-white px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+>
+  Novo formulário
+</button>
             <button
               onClick={() => navigate("/admin/builder/preview")}
               className="border border-gray-200 bg-white px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"

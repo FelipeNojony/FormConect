@@ -1,8 +1,6 @@
 import SortableQuestionCard from "./SortableQuestionCard";
 
 export default function BuilderCanvas({
-  formTitle,
-  formDescription,
   questions,
   selectedQuestionId,
   onSelectQuestion,
@@ -16,11 +14,11 @@ export default function BuilderCanvas({
         </span>
 
         <h1 className="text-3xl font-bold text-gray-950 mt-4">
-          {formTitle || "Novo formulário"}
+          Novo formulário
         </h1>
 
         <p className="text-gray-500 mt-2">
-          {formDescription || "Adicione uma descrição para seu formulário"}
+          Monte seu formulário com a mesma lógica do Microsoft Forms.
         </p>
       </div>
 

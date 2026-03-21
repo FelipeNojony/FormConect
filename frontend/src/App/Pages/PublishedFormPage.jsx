@@ -4,6 +4,7 @@ import Header from "../Components/Header";
 import { toast } from "sonner";
 
 const PUBLISHED_FORMS_KEY = "formconnect-published-forms";
+const RESPONSES_KEY = "formconnect-responses";
 
 export default function PublishedFormPage() {
   const { slug } = useParams();
@@ -33,15 +34,31 @@ export default function PublishedFormPage() {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      console.log("Resposta do formulário publicado:", {
-        slug,
-        formData,
-      });
+    try {
+      const savedResponses = JSON.parse(
+        localStorage.getItem(RESPONSES_KEY) || "[]"
+      );
 
-      toast.success("Formulário enviado com sucesso!");
+      const newResponse = {
+        id: crypto.randomUUID(),
+        formSlug: slug,
+        formTitle: form?.title || "Formulário sem título",
+        answers: formData,
+        createdAt: new Date().toISOString(),
+      };
+
+      const updatedResponses = [...savedResponses, newResponse];
+
+      localStorage.setItem(RESPONSES_KEY, JSON.stringify(updatedResponses));
+
+      toast.success("Resposta enviada com sucesso!");
+      setFormData({});
+    } catch (error) {
+      console.error("Erro ao salvar resposta:", error);
+      toast.error("Erro ao enviar resposta");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   }
 
   function renderField(question) {
@@ -138,7 +155,7 @@ export default function PublishedFormPage() {
         <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-8 md:p-10">
           <div className="mb-8">
             <span className="text-xs bg-blue-100 text-blue-600 px-4 py-2 rounded-full font-medium">
-              Publicado
+              {form.tag || "Publicado"}
             </span>
 
             <h1 className="text-3xl font-bold text-gray-950 mt-4">

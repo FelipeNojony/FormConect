@@ -1,8 +1,70 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../Components/Header";
+import { toast } from "sonner";
+
+const PUBLISHED_FORMS_KEY = "formconnect-published-forms";
+const EDITING_FORM_KEY = "formconnect-editing-form";
 
 export default function AdminPage() {
   const navigate = useNavigate();
+  const [publishedForms, setPublishedForms] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTag, setSelectedTag] = useState("Todos");
+
+  useEffect(() => {
+    loadPublishedForms();
+  }, []);
+
+  function loadPublishedForms() {
+    const savedForms = JSON.parse(
+      localStorage.getItem(PUBLISHED_FORMS_KEY) || "[]"
+    );
+
+    setPublishedForms(savedForms);
+  }
+
+  function handleDeleteForm(slug) {
+    const updatedForms = publishedForms.filter((form) => form.slug !== slug);
+
+    localStorage.setItem(PUBLISHED_FORMS_KEY, JSON.stringify(updatedForms));
+    setPublishedForms(updatedForms);
+
+    toast.success("Formulário excluído com sucesso!");
+  }
+
+  function handleEditForm(form) {
+    localStorage.setItem(EDITING_FORM_KEY, JSON.stringify(form));
+    navigate("/admin/builder");
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return "Data não disponível";
+
+    return new Date(dateString).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
+  const availableTags = useMemo(() => {
+    const tags = publishedForms.map((form) => form.tag || "Personalizado");
+    return ["Todos", ...new Set(tags)];
+  }, [publishedForms]);
+
+  const filteredForms = useMemo(() => {
+    return publishedForms.filter((form) => {
+      const matchesSearch = form.title
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      const matchesTag =
+        selectedTag === "Todos" || (form.tag || "Personalizado") === selectedTag;
+
+      return matchesSearch && matchesTag;
+    });
+  }, [publishedForms, searchTerm, selectedTag]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -19,56 +81,170 @@ export default function AdminPage() {
           </h1>
 
           <p className="text-gray-500 mt-3 text-lg max-w-2xl">
-            Gerencie formulários, crie novas estruturas e acompanhe a evolução do sistema.
+            Gerencie formulários publicados e acesse o builder para criar novos.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Builder de Formulários
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Crie e edite formulários com uma experiência visual parecida com Microsoft Forms.
-            </p>
+        <div className="mb-8 flex flex-wrap gap-3">
+          <button
+            onClick={() => navigate("/admin/builder")}
+            className="bg-black text-white px-5 py-3 rounded-xl font-medium hover:opacity-90 transition"
+          >
+            Abrir Builder
+          </button>
 
-            <button
-              onClick={() => navigate("/admin/builder")}
-              className="w-full bg-black text-white py-3 rounded-xl font-medium hover:opacity-90 transition"
-            >
-              Abrir Builder
-            </button>
+          <button
+            onClick={() => navigate("/")}
+            className="border border-gray-200 bg-white px-5 py-3 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition"
+          >
+            Ir para Home
+          </button>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Resumo
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+              <p className="text-sm text-gray-500">Formulários publicados</p>
+              <p className="text-3xl font-bold text-gray-950 mt-2">
+                {publishedForms.length}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+              <p className="text-sm text-gray-500">Resultados filtrados</p>
+              <p className="text-3xl font-bold text-gray-950 mt-2">
+                {filteredForms.length}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+              <p className="text-sm text-gray-500">Modo</p>
+              <p className="text-lg font-semibold text-gray-950 mt-2">
+                LocalStorage
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Formulários publicados
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Visualize, filtre e gerencie os formulários criados no builder.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full lg:w-auto">
+              <input
+                type="text"
+                placeholder="Buscar por título..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full md:w-72 rounded-xl bg-gray-100 px-4 py-3 outline-none border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+
+              <select
+                value={selectedTag}
+                onChange={(e) => setSelectedTag(e.target.value)}
+                className="w-full md:w-52 rounded-xl bg-gray-100 px-4 py-3 outline-none border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                {availableTags.map((tag) => (
+                  <option key={tag} value={tag}>
+                    {tag}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Formulários Publicados
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Visualize os formulários já criados e gerencie suas versões.
-            </p>
+          {filteredForms.length === 0 ? (
+            <div className="text-center py-14">
+              <p className="text-gray-500 text-lg">
+                Nenhum formulário encontrado com os filtros atuais.
+              </p>
 
-            <button
-              className="w-full border border-gray-200 text-gray-800 py-3 rounded-xl font-medium hover:bg-gray-50 transition"
-            >
-              Em breve
-            </button>
-          </div>
+              <button
+                onClick={() => navigate("/admin/builder")}
+                className="mt-5 bg-black text-white px-5 py-3 rounded-xl font-medium hover:opacity-90 transition"
+              >
+                Criar formulário
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredForms.map((form) => (
+                <div
+                  key={form.id}
+                  className="border border-gray-200 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5"
+                >
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+                        {form.tag || "Personalizado"}
+                      </span>
 
-          <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Respostas e Analytics
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Acompanhe respostas, métricas de uso e integrações futuras.
-            </p>
+                      <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+                        {form.fields || form.questions?.length || 0} campos
+                      </span>
 
-            <button
-              className="w-full border border-gray-200 text-gray-800 py-3 rounded-xl font-medium hover:bg-gray-50 transition"
-            >
-              Em breve
-            </button>
-          </div>
+                      <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+                        Publicado em {formatDate(form.publishedAt)}
+                      </span>
+                    </div>
+
+                    <h3 className="text-lg font-semibold text-gray-950">
+                      {form.title}
+                    </h3>
+
+                    <p className="text-sm text-gray-500 mt-1">
+                      {form.description}
+                    </p>
+
+                    <p className="text-xs text-gray-400 mt-3">
+                      Slug: {form.slug}
+                    </p>
+                  </div>
+
+                 <div className="flex flex-wrap items-center gap-3">
+  <button
+    onClick={() => navigate(`/form/publicado/${form.slug}`)}
+    className="border border-gray-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+  >
+    Visualizar
+  </button>
+
+  <button
+    onClick={() => navigate(`/admin/respostas/${form.slug}`)}
+    className="border border-gray-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+  >
+    Respostas
+  </button>
+
+  <button
+    onClick={() => handleEditForm(form)}
+    className="border border-gray-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+  >
+    Editar
+  </button>
+
+  <button
+    onClick={() => handleDeleteForm(form.slug)}
+    className="border border-red-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition"
+  >
+    Excluir
+  </button>
+</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

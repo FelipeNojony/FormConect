@@ -6,6 +6,7 @@ import BuilderPage from "./App/Pages/BuilderPage";
 import AdminPage from "./App/Pages/AdminPage";
 import BuilderPreviewPage from "./App/Pages/BuilderPreviewPage";
 import PublishedFormPage from "./App/Pages/PublishedFormPage";
+import ResponsesPage from "./App/Pages/ResponsesPages";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/admin/builder" element={<BuilderPage />} />
         <Route path="/admin/builder/preview" element={<BuilderPreviewPage />} />
         <Route path="/form/publicado/:slug" element={<PublishedFormPage />} />
+        <Route path="/admin/respostas/:slug" element={<ResponsesPage />} />
       </Routes>
 
       <Toaster position="top-right" richColors />
