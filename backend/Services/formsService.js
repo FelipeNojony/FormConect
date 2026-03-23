@@ -83,9 +83,7 @@ export async function savePublishedForm(formData) {
       placeholder: question.placeholder || null,
       options: question.options || null,
       position: index,
-      settings: {
-        ...(question.settings || {}),
-      },
+      settings: question.settings || {},
     }));
 
     const { error: insertQuestionsError } = await supabase
@@ -98,4 +96,47 @@ export async function savePublishedForm(formData) {
   }
 
   return { formId, slug };
+}
+
+export async function getPublishedForms() {
+  const { data, error } = await supabase
+    .from("forms")
+    .select("*")
+    .eq("status", "published")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function getPublishedFormBySlug(slug) {
+  const { data: form, error: formError } = await supabase
+    .from("forms")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
+
+  if (formError) {
+    throw formError;
+  }
+
+  const { data: questions, error: questionsError } = await supabase
+    .from("form_questions")
+    .select("*")
+    .eq("form_id", form.id)
+    .order("position", { ascending: true });
+
+  if (questionsError) {
+    throw questionsError;
+  }
+
+  return {
+    ...form,
+    questions,
+    fields: questions.length,
+  };
 }

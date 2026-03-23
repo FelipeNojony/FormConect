@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Header from "../Components/Header";
 import { toast } from "sonner";
 
-const PUBLISHED_FORMS_KEY = "formconnect-published-forms";
 const EDITING_FORM_KEY = "formconnect-editing-form";
 
 export default function AdminPage() {
@@ -16,21 +15,19 @@ export default function AdminPage() {
     loadPublishedForms();
   }, []);
 
-  function loadPublishedForms() {
-    const savedForms = JSON.parse(
-      localStorage.getItem(PUBLISHED_FORMS_KEY) || "[]"
-    );
-
-    setPublishedForms(savedForms);
+  async function loadPublishedForms() {
+    try {
+      const response = await fetch("http://localhost:3000/api/forms");
+      const data = await response.json();
+      setPublishedForms(data);
+    } catch (error) {
+      console.error("Erro ao carregar formulários:", error);
+      toast.error("Erro ao carregar formulários");
+    }
   }
 
-  function handleDeleteForm(slug) {
-    const updatedForms = publishedForms.filter((form) => form.slug !== slug);
-
-    localStorage.setItem(PUBLISHED_FORMS_KEY, JSON.stringify(updatedForms));
-    setPublishedForms(updatedForms);
-
-    toast.success("Formulário excluído com sucesso!");
+  async function handleDeleteForm(slug) {
+    toast.error("Exclusão pelo banco será o próximo passo.");
   }
 
   function handleEditForm(form) {
@@ -102,9 +99,7 @@ export default function AdminPage() {
         </div>
 
         <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Resumo
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Resumo</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5">
@@ -124,7 +119,7 @@ export default function AdminPage() {
             <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5">
               <p className="text-sm text-gray-500">Modo</p>
               <p className="text-lg font-semibold text-gray-950 mt-2">
-                LocalStorage
+                Supabase
               </p>
             </div>
           </div>
@@ -191,11 +186,7 @@ export default function AdminPage() {
                       </span>
 
                       <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
-                        {form.fields || form.questions?.length || 0} campos
-                      </span>
-
-                      <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
-                        Publicado em {formatDate(form.publishedAt)}
+                        Publicado em {formatDate(form.created_at)}
                       </span>
                     </div>
 
@@ -212,35 +203,28 @@ export default function AdminPage() {
                     </p>
                   </div>
 
-                 <div className="flex flex-wrap items-center gap-3">
-  <button
-    onClick={() => navigate(`/form/publicado/${form.slug}`)}
-    className="border border-gray-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-  >
-    Visualizar
-  </button>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      onClick={() => navigate(`/form/publicado/${form.slug}`)}
+                      className="border border-gray-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      Visualizar
+                    </button>
 
-  <button
-    onClick={() => navigate(`/admin/respostas/${form.slug}`)}
-    className="border border-gray-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-  >
-    Respostas
-  </button>
+                    <button
+                      onClick={() => handleEditForm(form)}
+                      className="border border-gray-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      Editar
+                    </button>
 
-  <button
-    onClick={() => handleEditForm(form)}
-    className="border border-gray-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-  >
-    Editar
-  </button>
-
-  <button
-    onClick={() => handleDeleteForm(form.slug)}
-    className="border border-red-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition"
-  >
-    Excluir
-  </button>
-</div>
+                    <button
+                      onClick={() => navigate(`/admin/respostas/${form.slug}`)}
+                      className="border border-gray-200 bg-white px-4 py-2 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      Respostas
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

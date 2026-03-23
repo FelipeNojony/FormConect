@@ -1,24 +1,38 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../Components/Header";
 import { toast } from "sonner";
 
-const PUBLISHED_FORMS_KEY = "formconnect-published-forms";
-const RESPONSES_KEY = "formconnect-responses";
 
 export default function PublishedFormPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
+  const [form, setForm] = useState(null);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
-  const form = useMemo(() => {
-    const publishedForms = JSON.parse(
-      localStorage.getItem(PUBLISHED_FORMS_KEY) || "[]"
-    );
+  useEffect(() => {
+    async function fetchForm() {
+      try {
+        const response = await fetch(`http://localhost:3000/api/forms/${slug}`);
 
-    return publishedForms.find((item) => item.slug === slug);
+        if (!response.ok) {
+          throw new Error("Formulário não encontrado");
+        }
+
+        const data = await response.json();
+        setForm(data);
+      } catch (error) {
+        console.error(error);
+        setForm(null);
+      } finally {
+        setPageLoading(false);
+      }
+    }
+
+    fetchForm();
   }, [slug]);
 
   function handleChange(e) {
@@ -30,36 +44,37 @@ export default function PublishedFormPage() {
     }));
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
+  async function handleSubmit(e) {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const savedResponses = JSON.parse(
-        localStorage.getItem(RESPONSES_KEY) || "[]"
-      );
+  try {
+    const response = await fetch(
+      `http://localhost:3000/api/forms/${slug}/responses`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          answers: formData,
+        }),
+      }
+    );
 
-      const newResponse = {
-        id: crypto.randomUUID(),
-        formSlug: slug,
-        formTitle: form?.title || "Formulário sem título",
-        answers: formData,
-        createdAt: new Date().toISOString(),
-      };
-
-      const updatedResponses = [...savedResponses, newResponse];
-
-      localStorage.setItem(RESPONSES_KEY, JSON.stringify(updatedResponses));
-
-      toast.success("Resposta enviada com sucesso!");
-      setFormData({});
-    } catch (error) {
-      console.error("Erro ao salvar resposta:", error);
-      toast.error("Erro ao enviar resposta");
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error("Erro ao enviar resposta");
     }
+
+    toast.success("Resposta enviada com sucesso!");
+    setFormData({});
+  } catch (error) {
+    console.error("Erro ao salvar resposta:", error);
+    toast.error("Erro ao enviar resposta");
+  } finally {
+    setLoading(false);
   }
+}
 
   function renderField(question) {
     switch (question.type) {
@@ -121,6 +136,19 @@ export default function PublishedFormPage() {
     }
   }
 
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="pt-28 max-w-4xl mx-auto px-6">
+          <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-8 text-center">
+            <p className="text-gray-500">Carregando formulário...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!form) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -162,9 +190,7 @@ export default function PublishedFormPage() {
               {form.title}
             </h1>
 
-            <p className="text-gray-500 text-lg mt-3">
-              {form.description}
-            </p>
+            <p className="text-gray-500 text-lg mt-3">{form.description}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">

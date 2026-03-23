@@ -1,66 +1,37 @@
+import { useEffect, useState } from "react";
 import Header from "../../App/Components/Header";
 import FormCard from "../../App/Components/FormCard";
-import FormsConfig from "../Data/FormsConfig";
-import { useEffect, useState } from "react";
-
-const PUBLISHED_FORMS_KEY = "formconnect-published-forms";
-
 
 export default function Home() {
+  const [forms, setForms] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const [publishedForms, setPublishedForms] = useState([]);
+  useEffect(() => {
+    async function fetchForms() {
+      try {
+        const response = await fetch("http://localhost:3000/api/forms");
+        const data = await response.json();
 
-useEffect(() => {
-  const savedPublishedForms = JSON.parse(
-    localStorage.getItem(PUBLISHED_FORMS_KEY) || "[]"
-  );
+        const formattedForms = data.map((form) => ({
+          id: form.id,
+          slug: form.slug,
+          title: form.title,
+          description: form.description,
+          tag: form.tag || "Personalizado",
+          fields: form.fields || 0,
+          isPublished: true,
+        }));
 
-  setPublishedForms(savedPublishedForms);
-}, []);
+        setForms(formattedForms);
+      } catch (error) {
+        console.error("Erro ao buscar formulários:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const defaultForms = [
-    {
-      id: "contato",
-      title: FormsConfig.contato.title,
-      description: FormsConfig.contato.description,
-      tag: FormsConfig.contato.tag,
-      fields: FormsConfig.contato.fields.length,
-    },
-    {
-      id: "satisfacao",
-      title: FormsConfig.satisfacao.title,
-      description: FormsConfig.satisfacao.description,
-      tag: FormsConfig.satisfacao.tag,
-      fields: FormsConfig.satisfacao.fields.length,
-    },
-    {
-      id: "evento",
-      title: FormsConfig.evento.title,
-      description: FormsConfig.evento.description,
-      tag: FormsConfig.evento.tag,
-      fields: FormsConfig.evento.fields.length,
-    },
-    {
-      id: "candidatos",
-      title: FormsConfig.candidatos.title,
-      description: FormsConfig.candidatos.description,
-      tag: FormsConfig.candidatos.tag,
-      fields: FormsConfig.candidatos.fields.length,
-    },
-  ];
-
-  const forms = [
-  ...defaultForms,
-  ...publishedForms.map((form) => ({
-    id: `published-${form.slug}`,
-    slug: form.slug,
-    title: form.title,
-    description: form.description,
-    tag: form.tag || "Personalizado",
-    fields: form.fields || form.questions?.length || 0,
-    isPublished: true,
-  })),
-];
+    fetchForms();
+  }, []);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -93,58 +64,28 @@ useEffect(() => {
               Escolha um formulário
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {forms.map((form) => (
-  <FormCard
-    key={form.id}
-    id={form.id}
-    slug={form.slug}
-    title={form.title}
-    description={form.description}
-    tag={form.tag}
-    fields={form.fields}
-    isPublished={form.isPublished}
-  />
-))}
-            </div>
-          </div>
-
-          <div className="pb-14">
-            <h3 className="text-2xl font-semibold text-gray-900 text-center mb-8">
-              Recursos do sistema
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                <div className="text-2xl mb-4">🧩</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  Formulários dinâmicos
-                </h4>
-                <p className="text-sm text-gray-600">
-                  Estrutura preparada para múltiplos formulários com campos reutilizáveis.
-                </p>
+            {loading ? (
+              <p className="text-center text-gray-500">Carregando formulários...</p>
+            ) : forms.length === 0 ? (
+              <p className="text-center text-gray-500">
+                Nenhum formulário publicado ainda.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {forms.map((form) => (
+                  <FormCard
+                    key={form.id}
+                    id={form.id}
+                    slug={form.slug}
+                    title={form.title}
+                    description={form.description}
+                    tag={form.tag}
+                    fields={form.fields}
+                    isPublished={form.isPublished}
+                  />
+                ))}
               </div>
-
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                <div className="text-2xl mb-4">⚡</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  Integração pronta
-                </h4>
-                <p className="text-sm text-gray-600">
-                  Backend preparado para envio de respostas ao Power Automate por webhook.
-                </p>
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                <div className="text-2xl mb-4">📊</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  Base para dashboard
-                </h4>
-                <p className="text-sm text-gray-600">
-                  Arquitetura pensada para evoluir para painel administrativo e modo SaaS.
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         </section>
       </main>
