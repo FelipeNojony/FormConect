@@ -248,45 +248,44 @@ export default function BuilderPage() {
   toast.success("Builder resetado");
 }
 
-  function handlePublishForm() {
-  const publishedForms = JSON.parse(
-    localStorage.getItem(PUBLISHED_FORMS_KEY) || "[]"
-  );
+ async function handlePublishForm() {
+  try {
+    const slug = builderData.slug || generateSlug(builderData.title || "novo-formulario");
 
-  const slug = builderData.slug || generateSlug(builderData.title || "novo-formulario");
-
-  const formToPublish = {
-    id: builderData.publishedId || crypto.randomUUID(),
-    slug,
-    title: builderData.title,
-    description: builderData.description,
-    tag: "Personalizado",
-    questions: builderData.questions,
-    fields: builderData.questions.length,
-    publishedAt: new Date().toISOString(),
-  };
-
-  const existingIndex = publishedForms.findIndex((form) => form.slug === slug);
-
-  if (existingIndex >= 0) {
-    publishedForms[existingIndex] = {
-      ...publishedForms[existingIndex],
-      ...formToPublish,
+    const payload = {
+      title: builderData.title,
+      description: builderData.description,
+      slug,
+      tag: builderData.tag || "Personalizado",
+      status: "published",
+      questions: builderData.questions,
     };
-  } else {
-    publishedForms.push(formToPublish);
+
+    const response = await fetch("http://localhost:3000/api/forms/publish", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Erro ao publicar formulário.");
+    }
+
+    const result = await response.json();
+
+    setBuilderData((prev) => ({
+      ...prev,
+      slug: result.slug,
+      publishedId: result.formId,
+    }));
+
+    toast.success("Formulário publicado com sucesso!");
+  } catch (error) {
+    console.error(error);
+    toast.error("Erro ao publicar formulário");
   }
-
-  localStorage.setItem(PUBLISHED_FORMS_KEY, JSON.stringify(publishedForms));
-  localStorage.removeItem(EDITING_FORM_KEY);
-
-  setBuilderData((prev) => ({
-    ...prev,
-    slug,
-    publishedId: formToPublish.id,
-  }));
-
-  toast.success("Formulário publicado com sucesso!");
 }
 
   return (

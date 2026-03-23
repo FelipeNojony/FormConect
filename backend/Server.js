@@ -2,7 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import dotenv from "dotenv";
 
-import formRoutes from "./Routes/formRoutes.js";
+import FormsRoutes from "./Routes/FormsRoutes.js";
 
 dotenv.config();
 
@@ -11,7 +11,7 @@ const app = Fastify({
 });
 
 await app.register(cors);
-await app.register(formRoutes, { prefix: "/submit" });
+await app.register(FormsRoutes, { prefix: "/api/forms" });
 
 try {
   await app.listen({ port: 3000 });

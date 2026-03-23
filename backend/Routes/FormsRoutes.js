@@ -1,0 +1,5 @@
+import { publishForm } from "../Controllers/formControllers.js";
+
+export default async function FormsRoutes(app) {
+  app.post("/publish", publishForm);
+}

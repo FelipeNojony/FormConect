@@ -1,19 +1,21 @@
-import { sendToMicrosoft } from "../services/microsoftService.js";
+import { savePublishedForm } from "../Services/formsService.js";
 
-export async function submitForm(request, reply) {
+export async function publishForm(request, reply) {
   try {
-    const data = request.body;
+    const payload = request.body;
 
-    await sendToMicrosoft(data);
+    const result = await savePublishedForm(payload);
 
-    console.log("Form enviado:", data);
-
-    return reply.status(200).send({ message: "Sucesso" });
+    return reply.status(200).send({
+      message: "Formulário salvo com sucesso.",
+      ...result,
+    });
   } catch (error) {
     request.log.error(error);
 
     return reply.status(500).send({
-      error: "Erro ao enviar formulário",
+      error: "Erro ao salvar formulário no Supabase.",
+      details: error.message,
     });
   }
 }
